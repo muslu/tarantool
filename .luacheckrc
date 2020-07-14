@@ -30,9 +30,14 @@ exclude_files = {
     "build/**/*.lua",
     -- Third-party source code.
     "test-run/**/*.lua",
-    "test/app/**/*.lua",
-    "test/app-tap/**/*.lua",
-    "test/box/**/*.lua",
+    "test/app/*.test.lua",
+    "test/box/*.test.lua",
+    -- Unused source file, to be dropped (gh-5169).
+    "test/box/lua/require_init.lua",
+    -- Unused source file, to be dropped (gh-5169).
+    "test/box/lua/require_mod.lua",
+    -- Unused source file, to be dropped (gh-5169).
+    "test/box/lua/test_init.lua",
     "test/box-py/**/*.lua",
     "test/box-tap/**/*.lua",
     "test/engine/**/*.lua",
@@ -101,4 +106,63 @@ files["src/box/lua/console.lua"] = {
         -- https://github.com/tarantool/tarantool/issues/5032
         "212",
     }
+}
+files["test/app-tap/lua/require_mod.lua"] = {
+    globals = {"exports"}
+}
+files["test/app-tap/string.test.lua"] = {
+    globals = {"utf8"}
+}
+files["test/app/lua/fiber.lua"] = {
+    globals = {"box_fiber_run_test"}
+}
+files["test/box/box.lua"] = {
+    globals = {
+        "cfg_filter",
+        "sorted",
+        "iproto_request",
+    }
+}
+files["test/box/lua/push.lua"] = {
+    globals = {"push_collection"}
+}
+files["test/box/lua/index_random_test.lua"] = {
+    globals = {"index_random_test"}
+}
+files["test/box/lua/utils.lua"] = {
+    globals = {
+        "arithmetic",
+        "check_space",
+        "create_iterator",
+        "iterate",
+        "setmap",
+        "sort",
+        "space_field_types",
+        "space_bsize",
+        "table_generate",
+        "table_shuffle",
+        "tuple_to_string",
+    }
+}
+files["test/box/lua/bitset.lua"] = {
+    globals = {
+        "clear",
+        "create_space",
+        "delete",
+        "drop_space",
+        "dump",
+        "fill",
+        "test_insert_delete",
+    }
+}
+files["test/box/lua/fifo.lua"] = {
+    globals = {
+        "fifomax",
+        "fifo_push",
+        "fifo_top",
+        "find_or_create_fifo",
+    }
+}
+files["test/box/lua/identifier.lua"] = {
+     globals = {"run_test"}
 }
