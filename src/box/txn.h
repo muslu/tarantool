@@ -258,6 +258,13 @@ struct txn_savepoint {
 	char name[1];
 };
 
+struct txn_ro_savepoint {
+	/** Region used during this transaction. */
+	struct region *region;
+	/** Savepoint for region. */
+	size_t region_used;
+};
+
 extern double too_long_threshold;
 
 /**
@@ -557,24 +564,27 @@ txn_begin_in_engine(struct engine *engine, struct txn *txn);
  * select.
  */
 static inline int
-txn_begin_ro_stmt(struct space *space, struct txn **txn)
+txn_begin_ro_stmt(struct space *space, struct txn **txn,
+		  struct txn_ro_savepoint *svp)
 {
 	*txn = in_txn();
 	if (*txn != NULL) {
 		struct engine *engine = space->engine;
 		return txn_begin_in_engine(engine, *txn);
 	}
+	svp->region = &fiber()->gc;
+	svp->region_used = region_used(svp->region);
 	return 0;
 }
 
 static inline void
-txn_commit_ro_stmt(struct txn *txn)
+txn_commit_ro_stmt(struct txn *txn, struct txn_ro_savepoint *svp)
 {
 	assert(txn == in_txn());
 	if (txn) {
 		/* nothing to do */
 	} else {
-		fiber_gc();
+		region_truncate(svp->region, svp->region_used);
 	}
 }
 
