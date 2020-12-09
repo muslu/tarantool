@@ -533,8 +533,6 @@ i.dimension
 i.parts
 ---
 - - type: array
-    exclude_null: false
-    is_nullable: false
     fieldno: 2
 ...
 i:drop()

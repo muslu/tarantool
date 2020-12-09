@@ -59,11 +59,15 @@ luaT_push_key_def(struct lua_State *L, const struct key_def *key_def)
 			lua_setfield(L, -2, "path");
 		}
 
-		lua_pushboolean(L, key_part_is_nullable(part));
-		lua_setfield(L, -2, "is_nullable");
+		if (key_part_is_nullable(part)) {
+			lua_pushboolean(L, true);
+			lua_setfield(L, -2, "is_nullable");
+		}
 
-		lua_pushboolean(L, part->exclude_null);
-		lua_setfield(L, -2, "exclude_null");
+		if (part->exclude_null) {
+			lua_pushboolean(L, true);
+			lua_setfield(L, -2, "exclude_null");
+		}
 
 		if (part->coll_id != COLL_NONE) {
 			struct coll_id *coll_id = coll_by_id(part->coll_id);

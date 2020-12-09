@@ -31,20 +31,6 @@ local function coll_not_found(fieldno, collation)
     return ('Unknown collation: "%s"'):format(collation)
 end
 
-local function set_key_part_defaults(parts)
-    local res = {}
-    for i, part in ipairs(parts) do
-        res[i] = table.copy(part)
-        if res[i].is_nullable == nil then
-            res[i].is_nullable = false
-        end
-        if res[i].exclude_null == nil then
-            res[i].exclude_null = false
-        end
-    end
-    return res
-end
-
 local key_def_new_cases = {
     -- Cases to call before box.cfg{}.
     {
@@ -436,14 +422,11 @@ test:test('totable()', function(test)
     local key_def_b = key_def_lib.new(parts_b)
     local key_def_composite = key_def_lib.new(parts_composite)
 
-    local exp = set_key_part_defaults(parts_a)
-    test:is_deeply(key_def_a:totable(), exp, 'case 1')
+    test:is_deeply(key_def_a:totable(), parts_a, 'case 1')
 
-    local exp = set_key_part_defaults(parts_b)
-    test:is_deeply(key_def_b:totable(), exp, 'case 2')
+    test:is_deeply(key_def_b:totable(), parts_b, 'case 2')
 
-    local exp = set_key_part_defaults(parts_composite)
-    test:is_deeply(key_def_composite:totable(), exp, 'composite case')
+    test:is_deeply(key_def_composite:totable(), parts_composite, 'composite case')
 end)
 
 -- Case: __serialize().
@@ -460,11 +443,9 @@ test:test('__serialize()', function(test)
     local key_def_a = key_def_lib.new(parts_a)
     local key_def_b = key_def_lib.new(parts_b)
 
-    local exp = set_key_part_defaults(parts_a)
-    test:is(json.encode(key_def_a), json.encode(exp), 'case 1')
+    test:is(json.encode(key_def_a), json.encode(parts_a), 'case 1')
 
-    local exp = set_key_part_defaults(parts_b)
-    test:is(json.encode(key_def_b), json.encode(exp), 'case 2')
+    test:is(json.encode(key_def_b), json.encode(parts_b), 'case 2')
 end)
 
 -- Case: tostring().
@@ -523,15 +504,14 @@ test:test('merge()', function(test)
     -- Intersecting parts + NULL parts.
     local key_def_cb = key_def_c:merge(key_def_b)
     local exp_parts = key_def_c:totable()
-    exp_parts[#exp_parts + 1] = {type = 'number', fieldno = 3,
-        is_nullable = false, exclude_null = false}
+    exp_parts[#exp_parts + 1] = {type = 'number', fieldno = 3}
     test:is_deeply(key_def_cb:totable(), exp_parts,
         'case 3: verify with :totable()')
     test:is_deeply(key_def_cb:extract_key(tuple_a):totable(),
         {1, 1, box.NULL, 22}, 'case 3: verify with :extract_key()')
 
     local parts_unsigned = {
-        {type = 'unsigned', fieldno = 1, is_nullable = false, exclude_null = false},
+        {type = 'unsigned', fieldno = 1},
     }
     local key_def_unsigned = key_def_lib.new(parts_unsigned)
     local key_def_string = key_def_lib.new({
@@ -554,9 +534,9 @@ test:test('merge()', function(test)
 
     local key_def_array_map = key_def_array:merge(key_def_map)
     local exp_parts = {
-        {type = 'array', fieldno = 1, is_nullable = false, exclude_null = false},
-        {type = 'unsigned', fieldno = 2, is_nullable = false, exclude_null = false},
-        {type = 'map', fieldno = 3, is_nullable = true, exclude_null = false},
+        {type = 'array', fieldno = 1},
+        {type = 'unsigned', fieldno = 2},
+        {type = 'map', fieldno = 3, is_nullable = true},
     }
     test:is_deeply(key_def_array_map:totable(), exp_parts,
         'composite case')
