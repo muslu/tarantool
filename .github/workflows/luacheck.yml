@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['master']
+  pull_request:
+
+env:
+  CI_MAKE: make -f .travis.mk
+
+jobs:
+  luacheck:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+    container:
+      image: ghcr.io/avtikhon/tarantool/testing/debian-stretch:latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: test
+        run: ${CI_MAKE} test_debian_luacheck
