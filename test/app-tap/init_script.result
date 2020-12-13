@@ -13,6 +13,7 @@ election_timeout:5
 feedback_enabled:true
 feedback_host:https://feedback.tarantool.io
 feedback_interval:3600
+feedback_no_crashinfo:false
 force_recovery:false
 hot_standby:false
 listen:port
