@@ -9,14 +9,8 @@ add_library(fuzzer_config INTERFACE)
 target_compile_options(
     fuzzer_config
     INTERFACE
-        $<$<BOOL:${ENABLE_ASAN}>:
-        -fsanitize=fuzzer,address
-        >
-        $<$<BOOL:${ENABLE_UB_SANITIZER}>:
-        -fsanitize=fuzzer,undefined
-        >
         $<$<NOT:$<BOOL:${OSS_FUZZ}>>:
-          -fsanitize=fuzzer
+        -fsanitize=fuzzer
         >
         $<$<BOOL:${OSS_FUZZ}>:
         ${CXX}
@@ -26,14 +20,8 @@ target_compile_options(
 target_link_libraries(
     fuzzer_config
     INTERFACE
-        $<$<BOOL:${ENABLE_ASAN}>:
-        -fsanitize=fuzzer,address
-        >
-        $<$<BOOL:${ENABLE_UB_SANITIZER}>:
-        -fsanitize=fuzzer,undefined
-        >
         $<$<NOT:$<BOOL:${OSS_FUZZ}>>:
-          -fsanitize=fuzzer
+        -fsanitize=fuzzer
         >
         $<$<BOOL:${OSS_FUZZ}>:
         $ENV{LIB_FUZZING_ENGINE}
