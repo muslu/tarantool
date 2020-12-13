@@ -53,6 +53,9 @@ if(ENABLE_FUZZER)
             " $ CC=clang CXX=clang++ cmake . <...> -DENABLE_FUZZER=ON && make -j\n"
             "\n")
     endif()
+    if (NOT OSS_FUZZ)
+        add_compile_flags("C;CXX" -fsanitize=fuzzer-no-link)
+    endif()
 endif()
 
 option(ENABLE_ASAN "Enable AddressSanitizer, a fast memory error detector based on compiler instrumentation" OFF)
