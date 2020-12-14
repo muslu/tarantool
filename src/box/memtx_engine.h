@@ -49,6 +49,7 @@ struct index;
 struct fiber;
 struct tuple;
 struct tuple_format;
+struct allocator_stats;
 
 /**
  * The state of memtx recovery process.
@@ -133,10 +134,6 @@ struct memtx_engine {
 	 * is reflected in box.slab.info(), @sa lua/slab.c.
 	 */
 	struct slab_arena arena;
-	/** Slab cache for allocating tuples. */
-	struct slab_cache slab_cache;
-	/** Tuple allocator. */
-	struct small_alloc alloc;
 	/** Slab cache for allocating index extents. */
 	struct slab_cache index_slab_cache;
 	/** Index extent allocator. */
@@ -178,6 +175,8 @@ struct memtx_engine {
 	 * memtx_gc_task::link.
 	 */
 	struct stailq gc_queue;
+	/** Memtx allocator type */
+	int type;
 };
 
 struct memtx_gc_task;
@@ -213,7 +212,7 @@ struct memtx_engine *
 memtx_engine_new(const char *snap_dirname, bool force_recovery,
 		 uint64_t tuple_arena_max_size,
 		 uint32_t objsize_min, bool dontdump,
-		 float alloc_factor);
+		 const char *allocator, float alloc_factor);
 
 int
 memtx_engine_recover_snapshot(struct memtx_engine *memtx,
@@ -235,23 +234,35 @@ memtx_engine_set_max_tuple_size(struct memtx_engine *memtx, size_t max_size);
  * times from the same or different fibers - one just has to leave
  * the delayed free mode the same amount of times then.
  */
-void
-memtx_enter_delayed_free_mode(struct memtx_engine *memtx);
+typedef void
+(*global_memtx_enter_delayed_free_mode)(struct memtx_engine *memtx);
+extern global_memtx_enter_delayed_free_mode g_memtx_enter_delayed_free_mode;
 
 /**
  * Leave tuple delayed free mode. This function undoes the effect
  * of memtx_enter_delayed_free_mode().
  */
-void
-memtx_leave_delayed_free_mode(struct memtx_engine *memtx);
+typedef void
+(*global_memtx_leave_delayed_free_mode)(struct memtx_engine *memtx);
+extern global_memtx_leave_delayed_free_mode g_memtx_leave_delayed_free_mode;
 
 /** Allocate a memtx tuple. @sa tuple_new(). */
-struct tuple *
-memtx_tuple_new(struct tuple_format *format, const char *data, const char *end);
+typedef struct tuple *
+(*global_memtx_tuple_new)(struct tuple_format *format, const char *data, const char *end);
+extern global_memtx_tuple_new g_memtx_tuple_new;
 
 /** Free a memtx tuple. @sa tuple_delete(). */
-void
-memtx_tuple_delete(struct tuple_format *format, struct tuple *tuple);
+typedef void
+(*global_memtx_tuple_delete)(struct tuple_format *format, struct tuple *tuple);
+extern global_memtx_tuple_delete g_memtx_tuple_delete;
+
+typedef void
+(*global_memtx_mem_check)();
+extern global_memtx_mem_check g_memtx_mem_check;
+
+typedef void
+(*global_memtx_allocator_stats)(struct allocator_stats *stats, ...);
+extern global_memtx_allocator_stats g_memtx_allocator_stats;
 
 /** Tuple format vtab for memtx engine. */
 extern struct tuple_format_vtab memtx_tuple_format_vtab;
@@ -299,13 +310,13 @@ static inline struct memtx_engine *
 memtx_engine_new_xc(const char *snap_dirname, bool force_recovery,
 		    uint64_t tuple_arena_max_size,
 		    uint32_t objsize_min, bool dontdump,
-		    float alloc_factor)
+		    const char *allocator, float alloc_factor)
 {
 	struct memtx_engine *memtx;
 	memtx = memtx_engine_new(snap_dirname, force_recovery,
 				 tuple_arena_max_size,
 				 objsize_min, dontdump,
-				 alloc_factor);
+				 allocator, alloc_factor);
 	if (memtx == NULL)
 		diag_raise();
 	return memtx;
