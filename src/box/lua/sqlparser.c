@@ -82,6 +82,18 @@ exit_cleanup:
 	return rc;
 }
 
+static
+void sql_ast_reset(struct sql_parsed_ast *ast)
+{
+	switch (ast->ast_type) {
+		case AST_TYPE_SELECT: 	// SELECT
+			sqlSelectReset(ast->select);
+			break;
+		default:
+			assert(0);
+	}
+}
+
 /**
  * Parse SQL to AST, return it as cdata
  * FIXME - split to the Lua and SQL parts..
@@ -115,7 +127,8 @@ lbox_sqlparser_parse(struct lua_State *L)
 		}
 	} else {
 		ast = entry->ast;
-		goto return_error; // FIXME - some odd problems here
+		sql_ast_reset(ast);
+		//goto return_error; // FIXME - some odd problems here
 #if 0
 		if (sql_stmt_schema_version(stmt) != box_schema_version() &&
 		    !sql_stmt_busy(stmt)) {
@@ -192,8 +205,6 @@ sql_ast_generate_vdbe(struct lua_State *L, struct stmt_cache_entry *entry)
 			int rc = sqlSelect(&sParse, p, &dest);
 			if (rc != 0)
 				return NULL;
-			// FIXME - reuse of same AST need to be cleaned up eventually
-			// sql_select_delete(sParse.db, p);
 			break;
 		}
 
