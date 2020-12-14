@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  schedule:
+    - cron:  '0 4 * * 6'
+
+env:
+  CI_MAKE: make -f .travis.mk
+
+jobs:
+  coverity:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+    container:
+      image: ghcr.io/avtikhon/tarantool/testing/debian-buster:latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: test
+        run: ${CI_MAKE} test_coverity_debian_no_deps
+        env:
+          COVERITY_TOKEN: ${{ secrets.COVERITY_TOKEN }}
+      - name: artifacts
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: debug
+          retention-days: 1000000
+          path: test/var/artifacts
