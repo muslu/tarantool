@@ -3,6 +3,8 @@ globals = {"box", "_TARANTOOL", "tonumber64"}
 ignore = {
     -- Accessing an undefined field of a global variable <debug>.
     "143/debug",
+    -- Accessing an undefined field of a global variable <os>.
+    "143/os",
     -- Accessing an undefined field of a global variable <string>.
     "143/string",
     -- Accessing an undefined field of a global variable <table>.
@@ -31,7 +33,6 @@ exclude_files = {
     -- Third-party source code.
     "test-run/**/*.lua",
     "test/app/**/*.lua",
-    "test/app-tap/**/*.lua",
     "test/box/**/*.lua",
     "test/box-py/**/*.lua",
     "test/box-tap/**/*.lua",
@@ -101,4 +102,10 @@ files["src/box/lua/console.lua"] = {
         -- https://github.com/tarantool/tarantool/issues/5032
         "212",
     }
+}
+files["test/app-tap/lua/require_mod.lua"] = {
+    globals = {"exports"}
+}
+files["test/app-tap/string.test.lua"] = {
+    globals = {"utf8"}
 }
