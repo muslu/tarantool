@@ -265,6 +265,80 @@ s:select{}
 
 s:drop()
 
+-- Fixme: anti-dependency
+s = box.schema.space.create('test')
+i1 = s:create_index('pk', {parts={{1, 'uint'}}})
+i2 = s:create_index('sec', {parts={{2, 'uint'}}})
+
+tx1:begin()
+tx2:begin()
+tx1('s:select({0}, {iterator=\'GT\'})')
+tx2('s:select({0}, {iterator=\'GT\'})')
+tx1("s:replace{1, 11}")
+tx2("s:replace{2, 22}")
+tx1:commit()
+tx2:commit()
+
+s:select{}
+
+s:drop()
+
+-- Fixme: write skew, initially empty space, select the whole space
+s = box.schema.space.create('test')
+i1 = s:create_index('pk', {parts={{1, 'uint'}}})
+i2 = s:create_index('sec', {parts={{2, 'uint'}}})
+
+tx1:begin()
+tx2:begin()
+tx1("s:select{}")
+tx2("s:select{}")
+tx1("s:replace{1, 11}")
+tx2("s:replace{2, 22}")
+tx1:commit()
+tx2:commit()
+
+s:select{}
+
+s:drop()
+
+-- Read skew
+s = box.schema.space.create('test')
+i1 = s:create_index('pk', {parts={{1, 'uint'}}})
+i2 = s:create_index('sec', {parts={{2, 'uint'}}})
+
+s:replace{1, 10}
+s:replace{2, 20}
+
+tx1:begin()
+tx2:begin()
+tx1("s:select{1}")
+tx2("s:select{1}")
+tx2("s:select{2}")
+tx2("s:replace{1, 12}")
+tx2("s:replace{2, 18}")
+tx2:commit()
+tx1("s:select{1}")
+tx1:commit()
+
+s:select{}
+
+s:drop()
+
+-- Collect garbage (assertion !tuple->is_dirty in tuple_unref)
+s = box.schema.space.create('test')
+i1 = s:create_index('pk')
+s:replace{1}
+s:drop()
+collectgarbage('collect')
+
+-- Creating unique index after deleting repeated tuple
+s = box.schema.space.create('test')
+i1 = s:create_index('pk')
+s:replace{1, 11}
+s:replace{2, 11}
+s:delete{2}
+i2 = s:create_index('sk', {parts = {{2, 'uint'}}})
+
 test_run:cmd("switch default")
 test_run:cmd("stop server tx_man")
 test_run:cmd("cleanup server tx_man")
