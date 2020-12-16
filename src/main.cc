@@ -76,6 +76,7 @@
 #include "box/lua/init.h" /* box_lua_init() */
 #include "box/session.h"
 #include "box/memtx_tx.h"
+#include "box/module.h"
 #include "systemd.h"
 #include "crypto/crypto.h"
 #include "core/popen.h"
@@ -837,6 +838,7 @@ main(int argc, char **argv)
 	memtx_tx_manager_init();
 	crypto_init();
 	systemd_init();
+	tx_init_module_api();
 	tarantool_lua_init(tarantool_bin, main_argc, main_argv);
 
 	start_time = ev_monotonic_time();
