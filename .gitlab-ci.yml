@@ -520,6 +520,12 @@ debian_10:
     OS: 'debian'
     DIST: 'buster'
 
+debian_11:
+  <<: *pack_definition
+  variables:
+    OS: 'debian'
+    DIST: 'bullseye'
+
 opensuse_15_1:
   <<: *pack_test_definition
   variables:
@@ -622,6 +628,12 @@ debian_10_deploy:
   variables:
     OS: 'debian'
     DIST: 'buster'
+
+debian_11_deploy:
+  <<: *deploy_definition
+  variables:
+    OS: 'debian'
+    DIST: 'bullseye'
 
 opensuse_15_1_deploy:
   <<: *deploy_test_definition
